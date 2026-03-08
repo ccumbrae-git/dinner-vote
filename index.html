@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Dinner Votes 🍽️</title>
+  <meta name="theme-color" content="#c0392b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dinner Votes">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:    #e63946;
+      --green:  #2a9d8f;
+      --orange: #f4a261;
+      --yellow: #e9c46a;
+      --blue:   #457b9d;
+      --bg:     #fff8f0;
+      --card:   #ffffff;
+      --border: #f0e6d6;
+      --text:   #1a1a1a;
+      --muted:  #888;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+
+    /* ── Views ────────────────────────────────── */
+    .view { display: none; min-height: 100vh; flex-direction: column; }
+    .view.active { display: flex; }
+
+    /* ── Header ───────────────────────────────── */
+    .header {
+      background: var(--red);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .header h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; }
+    .header p  { font-size: 0.85rem; opacity: 0.85; margin-top: 2px; }
+
+    /* ── Home ─────────────────────────────────── */
+    .home-content { padding: 20px; flex: 1; }
+
+    .start-btn {
+      display: block; width: 100%;
+      padding: 18px;
+      background: var(--red); color: white;
+      border: none; border-radius: var(--radius);
+      font-size: 1.2rem; font-weight: 800;
+      cursor: pointer; margin-bottom: 24px;
+      transition: transform 0.1s, opacity 0.1s;
+    }
+    .start-btn:active { transform: scale(0.97); opacity: 0.88; }
+
+    .section-title {
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--muted); margin-bottom: 12px;
+    }
+
+    .home-actions {
+      display: flex; gap: 10px; margin-bottom: 20px;
+    }
+    .home-actions .btn { flex: 1; padding: 12px; font-size: 0.9rem; }
+
+    .dinner-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px; margin-bottom: 10px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .dinner-card:active { transform: scale(0.98); }
+    .dinner-card .name { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+    .dinner-card .votes-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .vote-chip {
+      display: flex; align-items: center; gap: 4px;
+      background: var(--bg); border-radius: 20px;
+      padding: 2px 10px; font-size: 0.8rem;
+    }
+    .vote-chip .ce { font-size: 1rem; }
+
+    /* ── Picker overlay ───────────────────────── */
+    .picker-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100; display: none; align-items: flex-end;
+    }
+    .picker-overlay.open { display: flex; }
+    .picker-sheet {
+      background: white; width: 100%;
+      max-height: 80vh; border-radius: 20px 20px 0 0;
+      padding: 20px; overflow-y: auto;
+      animation: slideUp 0.25s ease;
+    }
+    .picker-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; text-align: center; }
+    .picker-search {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 1rem; margin-bottom: 12px; outline: none;
+    }
+    .picker-search:focus { border-color: var(--red); }
+    .picker-list { display: flex; flex-direction: column; gap: 8px; }
+    .picker-item {
+      padding: 14px 16px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-size: 1rem; cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .picker-item:active { background: var(--bg); border-color: var(--red); }
+    .picker-item .voted-tag {
+      font-size: 0.7rem; background: #eee; border-radius: 20px;
+      padding: 2px 8px; color: var(--muted);
+    }
+
+    /* ── Vote view ────────────────────────────── */
+    .vote-header {
+      background: var(--red); color: white;
+      padding: 20px 20px 30px; text-align: center; flex-shrink: 0;
+    }
+    .vote-progress { font-size: 0.8rem; opacity: 0.8; margin-bottom: 8px; }
+    .vote-dinner   { font-size: 1rem; opacity: 0.9; margin-bottom: 4px; }
+    .vote-name     { font-size: 2.4rem; font-weight: 900; letter-spacing: -1px; }
+
+    .vote-content {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 28px 20px; gap: 14px;
+    }
+    .vote-prompt { font-size: 1rem; color: var(--muted); text-align: center; margin-bottom: 6px; }
+
+    .vote-btn {
+      display: flex; align-items: center; gap: 16px;
+      width: 100%; padding: 20px 24px;
+      border: 2.5px solid var(--border); border-radius: var(--radius);
+      background: white; cursor: pointer;
+      transition: transform 0.08s, background 0.08s;
+    }
+    .vote-btn:active { transform: scale(0.97); }
+    .vote-btn .ve { font-size: 2.5rem; }
+    .vote-btn .vl strong { display: block; font-size: 1.1rem; font-weight: 700; }
+    .vote-btn .vl span   { font-size: 0.85rem; color: var(--muted); }
+
+    .vote-btn.yum  { border-color: var(--green); }
+    .vote-btn.yum:active  { background: #e6f7f5; }
+    .vote-btn.soso { border-color: var(--orange); }
+    .vote-btn.soso:active { background: #fff5ee; }
+    .vote-btn.nope { border-color: var(--red); }
+    .vote-btn.nope:active { background: #fdf0f1; }
+
+    .pass-prompt {
+      background: #f5f5f5; border-radius: 12px;
+      padding: 12px 16px; font-size: 0.85rem;
+      color: var(--muted); text-align: center; width: 100%;
+    }
+
+    /* ── Results view ─────────────────────────── */
+    .results-header {
+      background: linear-gradient(135deg, var(--red), var(--orange));
+      color: white; padding: 28px 20px; text-align: center; flex-shrink: 0;
+    }
+    .results-trophy    { font-size: 3.5rem; margin-bottom: 8px; }
+    .results-headline  { font-size: 1.4rem; font-weight: 900; }
+    .results-subhead   { font-size: 1rem; opacity: 0.9; margin-top: 4px; }
+
+    .results-content { padding: 20px; flex: 1; overflow-y: auto; }
+
+    .summary-bar {
+      display: flex; background: var(--card);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; gap: 12px; margin-bottom: 20px;
+      justify-content: space-around;
+    }
+    .summary-item { text-align: center; }
+    .summary-item .se    { font-size: 2rem; }
+    .summary-item .count { font-size: 1.6rem; font-weight: 900; display: block; }
+    .summary-item .slbl  { font-size: 0.75rem; color: var(--muted); }
+
+    .member-results { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .member-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .member-name       { font-weight: 700; font-size: 1rem; }
+    .member-vote-emoji { font-size: 2rem; }
+    .member-vote-label { font-size: 0.8rem; color: var(--muted); }
+
+    .results-actions { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── Export modal ─────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200; display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white; border-radius: var(--radius);
+      padding: 24px; width: 100%; max-width: 420px;
+      animation: pop 0.2s ease;
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+    .modal-body  { margin-bottom: 20px; }
+    .export-textarea {
+      width: 100%; height: 180px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 12px; font-size: 0.8rem; font-family: monospace;
+      resize: none; color: var(--text); background: #fafafa;
+      outline: none;
+    }
+    .modal-actions { display: flex; flex-direction: column; gap: 10px; }
+
+    /* ── Buttons ──────────────────────────────── */
+    .btn {
+      display: block; width: 100%; padding: 15px;
+      border: none; border-radius: var(--radius);
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      text-align: center; transition: opacity 0.1s, transform 0.08s;
+    }
+    .btn:active { opacity: 0.85; transform: scale(0.98); }
+    .btn-primary   { background: var(--red);   color: white; }
+    .btn-secondary { background: var(--card);  color: var(--text); border: 1.5px solid var(--border); }
+    .btn-green     { background: var(--green); color: white; }
+    .btn-blue      { background: var(--blue);  color: white; }
+
+    /* ── Empty state ──────────────────────────── */
+    .empty-state { text-align: center; color: var(--muted); padding: 40px 20px; }
+    .empty-state .ei { font-size: 3rem; margin-bottom: 12px; }
+
+    /* ── Toast ────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #333; color: white; padding: 10px 20px;
+      border-radius: 30px; font-size: 0.9rem; font-weight: 500;
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Animations ───────────────────────────── */
+    @keyframes pop {
+      0%   { transform: scale(0.85); opacity: 0; }
+      70%  { transform: scale(1.03); }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .animate-in { animation: slideUp 0.25s ease forwards; }
+
+    /* ── Confetti ─────────────────────────────── */
+    #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 998; }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════════
+     HOME VIEW
+═══════════════════════════════════════════════ -->
+<div id="view-home" class="view active">
+  <div class="header">
+    <h1>🍽️ Dinner Votes</h1>
+    <p>The family dinner rating system</p>
+  </div>
+  <div class="home-content">
+    <button class="start-btn" onclick="openPicker()">🗳️ Vote on a Dinner</button>
+
+    <div class="home-actions">
+      <button class="btn btn-secondary" onclick="openExportAll()">📤 Export All Results</button>
+      <button class="btn btn-secondary" onclick="confirmClear()">🗑️ Clear All</button>
+    </div>
+
+    <div class="section-title">Past Votes</div>
+    <div id="past-votes-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     VOTE VIEW
+═══════════════════════════════════════════════ -->
+<div id="view-vote" class="view">
+  <div class="vote-header">
+    <div class="vote-progress" id="vote-progress"></div>
+    <div class="vote-dinner"   id="vote-dinner-name"></div>
+    <div class="vote-name"     id="vote-person-name"></div>
+  </div>
+  <div class="vote-content">
+    <div class="vote-prompt">How did you like it?</div>
+
+    <button class="vote-btn yum"  onclick="castVote('yum')">
+      <span class="ve">👍</span>
+      <span class="vl"><strong>Yum!</strong><span>I loved it</span></span>
+    </button>
+    <button class="vote-btn soso" onclick="castVote('soso')">
+      <span class="ve">🤚</span>
+      <span class="vl"><strong>So-so</strong><span>It was alright</span></span>
+    </button>
+    <button class="vote-btn nope" onclick="castVote('nope')">
+      <span class="ve">👎</span>
+      <span class="vl"><strong>Not good</strong><span>Not my favourite</span></span>
+    </button>
+
+    <div class="pass-prompt" id="pass-prompt"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     RESULTS VIEW
+═══════════════════════════════════════════════ -->
+<div id="view-results" class="view">
+  <div class="results-header">
+    <div class="results-trophy"   id="results-trophy"></div>
+    <div class="results-headline" id="results-headline"></div>
+    <div class="results-subhead"  id="results-subhead"></div>
+  </div>
+  <div class="results-content">
+    <div class="summary-bar">
+      <div class="summary-item">
+        <span class="se">👍</span>
+        <span class="count" id="count-yum">0</span>
+        <span class="slbl">Yum</span>
+      </div>
+      <div class="summary-item">
+        <span class="se">🤚</span>
+        <span class="count" id="count-soso">0</span>
+        <span class="slbl">So-so</span>
+      </div>
+      <div class="summary-item">
+        <span class="se">👎</span>
+        <span class="count" id="count-nope">0</span>
+        <span class="slbl">Not good</span>
+      </div>
+    </div>
+
+    <div class="member-results" id="member-results"></div>
+
+    <div class="results-actions">
+      <button class="btn btn-green"      onclick="openExportSingle()">📤 Export This Result</button>
+      <button class="btn btn-primary"    onclick="openPicker()">🗳️ Vote on Another Dinner</button>
+      <button class="btn btn-secondary"  onclick="showView('home')">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DINNER PICKER OVERLAY
+═══════════════════════════════════════════════ -->
+<div class="picker-overlay" id="picker-overlay" onclick="maybeClosePicker(event)">
+  <div class="picker-sheet">
+    <div class="picker-title">🍴 Choose a Dinner</div>
+    <input class="picker-search" type="search" id="picker-search"
+           placeholder="Search dinners…" oninput="filterDinners(this.value)">
+    <div class="picker-list" id="picker-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     EXPORT MODAL
+═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="export-modal" onclick="maybeCloseModal(event)">
+  <div class="modal-box">
+    <div class="modal-title" id="export-modal-title">Export Results</div>
+    <div class="modal-body">
+      <textarea class="export-textarea" id="export-textarea" readonly></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary"   onclick="copyExport()">📋 Copy to Clipboard</button>
+      <button class="btn btn-green"     onclick="downloadExport()">⬇️ Download CSV</button>
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG — replace DINNERS with your real list
+// ═══════════════════════════════════════════════
+
+const FAMILY = ['Harry', 'Rosie', 'Max', 'Mum', 'Dad'];
+
+// 🍽️ DINNER LIST — swap these for your real dinners!
+const DINNERS = [
+  'Spaghetti Bolognese',
+  'Roast Chicken',
+  'Fish and Chips',
+  'Homemade Pizza',
+  'Tacos',
+  'Lasagne',
+  'Stir Fry Noodles',
+  "Shepherd's Pie",
+  'Beef Burgers',
+  'Fried Rice',
+  'Chicken Schnitzel',
+  'Beef Stew',
+  'Salmon with Veggies',
+  'Mac and Cheese',
+  'Butter Chicken',
+  'Pad Thai',
+  'Chicken Parma',
+  'Lamb Roast',
+  'Vegetable Curry',
+  'Pea and Ham Soup',
+  'BBQ Sausages',
+  'Nachos',
+  'Quiche',
+  'Chicken Soup',
+  'Chilli Con Carne',
+];
+
+const VOTE_EMOJI = { yum: '👍', soso: '🤚', nope: '👎' };
+const VOTE_LABEL = { yum: 'Yum!', soso: 'So-so', nope: 'Not good' };
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+
+let currentDinner      = null;
+let currentVoterIndex  = 0;
+let pendingVotes       = {};
+let currentExportData  = '';
+let currentExportName  = 'dinner-votes';
+
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
+
+function loadVotes() {
+  try { return JSON.parse(localStorage.getItem('dinnerVotes') || '{}'); }
+  catch { return {}; }
+}
+function saveVotes(v) {
+  localStorage.setItem('dinnerVotes', JSON.stringify(v));
+}
+
+// ═══════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'home') renderHome();
+}
+
+// ═══════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════
+
+function renderHome() {
+  const votes   = loadVotes();
+  const dinners = Object.keys(votes);
+  const list    = document.getElementById('past-votes-list');
+
+  if (dinners.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="ei">🍴</div>
+        <p>No votes yet.<br>Vote on your first dinner!</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = dinners.slice().reverse().map(dinner => {
+    const dv    = votes[dinner];
+    const chips = FAMILY.map(m => dv[m]
+      ? `<span class="vote-chip"><span class="ce">${VOTE_EMOJI[dv[m]]}</span> ${m}</span>` : ''
+    ).join('');
+
+    return `
+      <div class="dinner-card animate-in" onclick="showResults('${esc(dinner)}')">
+        <div class="name">${dinner}</div>
+        <div class="votes-row">${chips}</div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// PICKER
+// ═══════════════════════════════════════════════
+
+function openPicker() {
+  document.getElementById('picker-overlay').classList.add('open');
+  document.getElementById('picker-search').value = '';
+  renderPickerList(DINNERS);
+  setTimeout(() => document.getElementById('picker-search').focus(), 150);
+}
+function maybeClosePicker(e) {
+  if (e.target === document.getElementById('picker-overlay'))
+    document.getElementById('picker-overlay').classList.remove('open');
+}
+function filterDinners(q) {
+  const f = q ? DINNERS.filter(d => d.toLowerCase().includes(q.toLowerCase())) : DINNERS;
+  renderPickerList(f);
+}
+function renderPickerList(list) {
+  const votes = loadVotes();
+  document.getElementById('picker-list').innerHTML = list.map(d => `
+    <div class="picker-item" onclick="startVoting('${esc(d)}')">
+      ${d}
+      ${votes[d] ? '<span class="voted-tag">Voted</span>' : ''}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// VOTING
+// ═══════════════════════════════════════════════
+
+function startVoting(dinner) {
+  document.getElementById('picker-overlay').classList.remove('open');
+  currentDinner     = dinner;
+  currentVoterIndex = 0;
+  pendingVotes      = {};
+  renderVoteScreen();
+  showView('vote');
+}
+
+function renderVoteScreen() {
+  const person = FAMILY[currentVoterIndex];
+  document.getElementById('vote-progress').textContent =
+    `${currentVoterIndex + 1} of ${FAMILY.length}`;
+  document.getElementById('vote-dinner-name').textContent = currentDinner;
+  document.getElementById('vote-person-name').textContent = person;
+
+  const next = FAMILY[currentVoterIndex + 1];
+  document.getElementById('pass-prompt').innerHTML = next
+    ? `📱 Pass the phone to <strong>${next}</strong>`
+    : `✅ Last vote — results coming up!`;
+}
+
+function castVote(vote) {
+  pendingVotes[FAMILY[currentVoterIndex]] = vote;
+  currentVoterIndex++;
+
+  if (currentVoterIndex >= FAMILY.length) {
+    const votes = loadVotes();
+    votes[currentDinner] = pendingVotes;
+    saveVotes(votes);
+    showResults(currentDinner);
+    launchConfetti();
+  } else {
+    renderVoteScreen();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RESULTS
+// ═══════════════════════════════════════════════
+
+function showResults(dinner) {
+  const votes = loadVotes();
+  const dv    = votes[dinner] || {};
+
+  const counts = { yum: 0, soso: 0, nope: 0 };
+  FAMILY.forEach(m => { if (dv[m]) counts[dv[m]]++; });
+
+  document.getElementById('count-yum').textContent  = counts.yum;
+  document.getElementById('count-soso').textContent = counts.soso;
+  document.getElementById('count-nope').textContent = counts.nope;
+  document.getElementById('results-subhead').textContent = dinner;
+
+  // Score: yum=3, soso=2, nope=1 out of max 3×n
+  const voted    = FAMILY.filter(m => dv[m]).length;
+  const score    = counts.yum * 3 + counts.soso * 2 + counts.nope * 1;
+  const maxScore = voted * 3;
+  const pct      = maxScore > 0 ? score / maxScore : 0;
+
+  let trophy, headline;
+  if (pct >= 0.85) { trophy = '⭐️'; headline = 'Family Favourite!'; }
+  else if (pct >= 0.67) { trophy = '😋'; headline = 'Pretty Tasty!'; }
+  else if (pct >= 0.5)  { trophy = '😐'; headline = 'Mixed Feelings'; }
+  else                   { trophy = '😬'; headline = 'Maybe Not Again…'; }
+
+  document.getElementById('results-trophy').textContent   = trophy;
+  document.getElementById('results-headline').textContent = headline;
+
+  document.getElementById('member-results').innerHTML = FAMILY.map((m, i) => {
+    const v = dv[m];
+    return `
+      <div class="member-row" style="animation: slideUp 0.2s ${i * 0.06}s ease both">
+        <span class="member-name">${m}</span>
+        <div style="text-align:right">
+          <div class="member-vote-emoji">${v ? VOTE_EMOJI[v] : '—'}</div>
+          <div class="member-vote-label">${v ? VOTE_LABEL[v] : 'No vote'}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  currentDinner = dinner;
+  showView('results');
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════
+
+function buildCSV(dinnerFilter) {
+  const votes = loadVotes();
+  const dinners = dinnerFilter
+    ? [dinnerFilter]
+    : Object.keys(votes);
+
+  const header = ['Dinner', ...FAMILY, 'Yum Count', 'So-so Count', 'Not Good Count', 'Score'];
+  const rows = dinners.map(dinner => {
+    const dv = votes[dinner] || {};
+    const counts = { yum: 0, soso: 0, nope: 0 };
+    const memberVotes = FAMILY.map(m => {
+      const v = dv[m] || '';
+      if (v) counts[v]++;
+      return VOTE_LABEL[v] || '';
+    });
+    const voted    = FAMILY.filter(m => dv[m]).length;
+    const score    = counts.yum * 3 + counts.soso * 2 + counts.nope * 1;
+    const maxScore = voted * 3;
+    const pct      = maxScore > 0 ? Math.round((score / maxScore) * 100) + '%' : '—';
+    return [dinner, ...memberVotes, counts.yum, counts.soso, counts.nope, pct];
+  });
+
+  return [header, ...rows]
+    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+}
+
+function openExportSingle() {
+  const csv = buildCSV(currentDinner);
+  showExportModal(`Export: ${currentDinner}`, csv, slugify(currentDinner));
+}
+
+function openExportAll() {
+  const votes = loadVotes();
+  if (Object.keys(votes).length === 0) {
+    showToast('No votes to export yet!');
+    return;
+  }
+  const csv = buildCSV(null);
+  showExportModal('Export All Results', csv, 'dinner-votes-all');
+}
+
+function showExportModal(title, csv, filename) {
+  currentExportData = csv;
+  currentExportName = filename;
+  document.getElementById('export-modal-title').textContent = title;
+  document.getElementById('export-textarea').value = csv;
+  document.getElementById('export-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('export-modal').classList.remove('open');
+}
+function maybeCloseModal(e) {
+  if (e.target === document.getElementById('export-modal')) closeModal();
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(currentExportData).then(() => {
+    showToast('Copied to clipboard!');
+  }).catch(() => {
+    // fallback
+    document.getElementById('export-textarea').select();
+    document.execCommand('copy');
+    showToast('Copied!');
+  });
+}
+
+function downloadExport() {
+  const blob = new Blob([currentExportData], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = currentExportName + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Downloaded!');
+}
+
+// ═══════════════════════════════════════════════
+// CLEAR ALL
+// ═══════════════════════════════════════════════
+
+function confirmClear() {
+  const votes = loadVotes();
+  if (Object.keys(votes).length === 0) { showToast('Nothing to clear!'); return; }
+  if (confirm('Clear all dinner votes? This cannot be undone.')) {
+    localStorage.removeItem('dinnerVotes');
+    renderHome();
+    showToast('All votes cleared.');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CONFETTI
+// ═══════════════════════════════════════════════
+
+function launchConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#e63946','#f4a261','#2a9d8f','#e9c46a','#457b9d','#a8dadc'];
+  const particles = Array.from({ length: 100 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -20,
+    size: Math.random() * 9 + 4,
+    speedY: Math.random() * 3.5 + 1.5,
+    speedX: (Math.random() - 0.5) * 3,
+    rot: Math.random() * 360,
+    rotSpeed: (Math.random() - 0.5) * 6,
+    color: colors[Math.floor(Math.random() * colors.length)],
+  }));
+
+  let rafId;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    particles.forEach(p => {
+      p.y += p.speedY; p.x += p.speedX; p.rot += p.rotSpeed;
+      if (p.y < canvas.height) alive = true;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.restore();
+    });
+    if (alive) { rafId = requestAnimationFrame(draw); }
+    else { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+  }
+  draw();
+  setTimeout(() => { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 4000);
+}
+
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function esc(s) {
+  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+
+renderHome();
+</script>
+</body>
+</html>
