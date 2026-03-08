@@ -60,7 +60,7 @@
       background: var(--red); color: white;
       border: none; border-radius: var(--radius);
       font-size: 1.2rem; font-weight: 800;
-      cursor: pointer; margin-bottom: 24px;
+      cursor: pointer; margin-bottom: 16px;
       transition: transform 0.1s, opacity 0.1s;
     }
     .start-btn:active { transform: scale(0.97); opacity: 0.88; }
@@ -104,11 +104,41 @@
     .picker-overlay.open { display: flex; }
     .picker-sheet {
       background: white; width: 100%;
-      max-height: 80vh; border-radius: 20px 20px 0 0;
+      max-height: 85vh; border-radius: 20px 20px 0 0;
       padding: 20px; overflow-y: auto;
       animation: slideUp 0.25s ease;
     }
-    .picker-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; text-align: center; }
+
+    .picker-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+    }
+    .picker-back {
+      background: none; border: none; font-size: 1.3rem;
+      cursor: pointer; padding: 4px 8px; border-radius: 8px;
+      color: var(--text); flex-shrink: 0;
+    }
+    .picker-back:active { background: var(--bg); }
+    .picker-title { font-size: 1.1rem; font-weight: 700; flex: 1; text-align: center; }
+    .picker-title-spacer { width: 40px; flex-shrink: 0; } /* balances back button */
+
+    /* Person grid */
+    .person-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .person-btn {
+      padding: 22px 16px;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: white; cursor: pointer;
+      font-size: 1.15rem; font-weight: 700;
+      text-align: center;
+      transition: border-color 0.1s, background 0.1s, transform 0.08s;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .person-btn .avatar { font-size: 2rem; }
+    .person-btn:active { transform: scale(0.96); background: var(--bg); border-color: var(--red); }
+
+    /* Dinner search + list */
     .picker-search {
       width: 100%; padding: 12px 16px;
       border: 1.5px solid var(--border); border-radius: 10px;
@@ -126,17 +156,17 @@
     .picker-item:active { background: var(--bg); border-color: var(--red); }
     .picker-item .voted-tag {
       font-size: 0.7rem; background: #eee; border-radius: 20px;
-      padding: 2px 8px; color: var(--muted);
+      padding: 2px 8px; color: var(--muted); flex-shrink: 0;
     }
 
     /* ── Vote view ────────────────────────────── */
     .vote-header {
       background: var(--red); color: white;
-      padding: 20px 20px 30px; text-align: center; flex-shrink: 0;
+      padding: 28px 20px 34px; text-align: center; flex-shrink: 0;
     }
-    .vote-progress { font-size: 0.8rem; opacity: 0.8; margin-bottom: 8px; }
-    .vote-dinner   { font-size: 1rem; opacity: 0.9; margin-bottom: 4px; }
-    .vote-name     { font-size: 2.4rem; font-weight: 900; letter-spacing: -1px; }
+    .vote-dinner { font-size: 0.95rem; opacity: 0.85; margin-bottom: 6px; }
+    .vote-name   { font-size: 2.6rem; font-weight: 900; letter-spacing: -1px; line-height: 1; }
+    .vote-sub    { font-size: 0.9rem; opacity: 0.75; margin-top: 6px; }
 
     .vote-content {
       flex: 1; display: flex; flex-direction: column;
@@ -164,10 +194,10 @@
     .vote-btn.nope { border-color: var(--red); }
     .vote-btn.nope:active { background: #fdf0f1; }
 
-    .pass-prompt {
-      background: #f5f5f5; border-radius: 12px;
-      padding: 12px 16px; font-size: 0.85rem;
-      color: var(--muted); text-align: center; width: 100%;
+    .vote-back-link {
+      background: none; border: none;
+      color: var(--muted); font-size: 0.85rem;
+      cursor: pointer; padding: 8px; text-decoration: underline;
     }
 
     /* ── Results view ─────────────────────────── */
@@ -198,6 +228,7 @@
       background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 14px 16px;
     }
+    .member-row.highlight { border-color: var(--red); background: #fff5f5; }
     .member-name       { font-weight: 700; font-size: 1rem; }
     .member-vote-emoji { font-size: 2rem; }
     .member-vote-label { font-size: 0.8rem; color: var(--muted); }
@@ -239,7 +270,6 @@
     .btn-primary   { background: var(--red);   color: white; }
     .btn-secondary { background: var(--card);  color: var(--text); border: 1.5px solid var(--border); }
     .btn-green     { background: var(--green); color: white; }
-    .btn-blue      { background: var(--blue);  color: white; }
 
     /* ── Empty state ──────────────────────────── */
     .empty-state { text-align: center; color: var(--muted); padding: 40px 20px; }
@@ -251,7 +281,7 @@
       background: #333; color: white; padding: 10px 20px;
       border-radius: 30px; font-size: 0.9rem; font-weight: 500;
       z-index: 999; opacity: 0; pointer-events: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s; white-space: nowrap;
     }
     .toast.show { opacity: 1; }
 
@@ -288,7 +318,7 @@
     <button class="start-btn" onclick="openPicker()">🗳️ Vote on a Dinner</button>
 
     <div class="home-actions">
-      <button class="btn btn-secondary" onclick="openExportAll()">📤 Export All Results</button>
+      <button class="btn btn-secondary" onclick="openExportAll()">📤 Export All</button>
       <button class="btn btn-secondary" onclick="confirmClear()">🗑️ Clear All</button>
     </div>
 
@@ -302,13 +332,11 @@
 ═══════════════════════════════════════════════ -->
 <div id="view-vote" class="view">
   <div class="vote-header">
-    <div class="vote-progress" id="vote-progress"></div>
-    <div class="vote-dinner"   id="vote-dinner-name"></div>
-    <div class="vote-name"     id="vote-person-name"></div>
+    <div class="vote-dinner" id="vote-dinner-name"></div>
+    <div class="vote-name"   id="vote-person-name"></div>
+    <div class="vote-sub">How did you like it?</div>
   </div>
   <div class="vote-content">
-    <div class="vote-prompt">How did you like it?</div>
-
     <button class="vote-btn yum"  onclick="castVote('yum')">
       <span class="ve">👍</span>
       <span class="vl"><strong>Yum!</strong><span>I loved it</span></span>
@@ -321,8 +349,7 @@
       <span class="ve">👎</span>
       <span class="vl"><strong>Not good</strong><span>Not my favourite</span></span>
     </button>
-
-    <div class="pass-prompt" id="pass-prompt"></div>
+    <button class="vote-back-link" onclick="openPicker()">← Change selection</button>
   </div>
 </div>
 
@@ -357,22 +384,41 @@
     <div class="member-results" id="member-results"></div>
 
     <div class="results-actions">
-      <button class="btn btn-green"      onclick="openExportSingle()">📤 Export This Result</button>
-      <button class="btn btn-primary"    onclick="openPicker()">🗳️ Vote on Another Dinner</button>
-      <button class="btn btn-secondary"  onclick="showView('home')">🏠 Home</button>
+      <button class="btn btn-green"     onclick="openExportSingle()">📤 Export This Result</button>
+      <button class="btn btn-primary"   onclick="openPicker()">🗳️ Cast Another Vote</button>
+      <button class="btn btn-secondary" onclick="showView('home')">🏠 Home</button>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════
-     DINNER PICKER OVERLAY
+     PICKER OVERLAY (person → dinner)
 ═══════════════════════════════════════════════ -->
 <div class="picker-overlay" id="picker-overlay" onclick="maybeClosePicker(event)">
   <div class="picker-sheet">
-    <div class="picker-title">🍴 Choose a Dinner</div>
-    <input class="picker-search" type="search" id="picker-search"
-           placeholder="Search dinners…" oninput="filterDinners(this.value)">
-    <div class="picker-list" id="picker-list"></div>
+
+    <!-- Step 1: Who are you? -->
+    <div id="picker-step-person">
+      <div class="picker-header">
+        <div class="picker-title-spacer"></div>
+        <div class="picker-title">👋 Who are you?</div>
+        <div class="picker-title-spacer"></div>
+      </div>
+      <div class="person-grid" id="person-grid"></div>
+    </div>
+
+    <!-- Step 2: Choose dinner -->
+    <div id="picker-step-dinner" style="display:none">
+      <div class="picker-header">
+        <button class="picker-back" onclick="showPersonStep()">←</button>
+        <div class="picker-title" id="picker-dinner-title">🍴 Choose a Dinner</div>
+        <div class="picker-title-spacer"></div>
+      </div>
+      <input class="picker-search" type="search" id="picker-search"
+             placeholder="Search dinners…" oninput="filterDinners(this.value)">
+      <div class="picker-list" id="picker-list"></div>
+    </div>
+
   </div>
 </div>
 
@@ -395,10 +441,17 @@
 
 <script>
 // ═══════════════════════════════════════════════
-// CONFIG — replace DINNERS with your real list
+// CONFIG
 // ═══════════════════════════════════════════════
 
-const FAMILY = ['Harry', 'Rosie', 'Max', 'Mum', 'Dad'];
+const FAMILY = [
+  { name: 'Dad',   avatar: '👨' },
+  { name: 'Mum',   avatar: '👩' },
+  { name: 'Rosie', avatar: '👧' },
+  { name: 'Max',   avatar: '🧒' },
+  { name: 'Harry', avatar: '👦' },
+];
+const FAMILY_NAMES = FAMILY.map(f => f.name);
 
 // 🍽️ DINNER LIST — swap these for your real dinners!
 const DINNERS = [
@@ -436,9 +489,8 @@ const VOTE_LABEL = { yum: 'Yum!', soso: 'So-so', nope: 'Not good' };
 // STATE
 // ═══════════════════════════════════════════════
 
+let currentPerson      = null;   // selected family member name
 let currentDinner      = null;
-let currentVoterIndex  = 0;
-let pendingVotes       = {};
 let currentExportData  = '';
 let currentExportName  = 'dinner-votes';
 
@@ -485,43 +537,76 @@ function renderHome() {
 
   list.innerHTML = dinners.slice().reverse().map(dinner => {
     const dv    = votes[dinner];
-    const chips = FAMILY.map(m => dv[m]
+    const chips = FAMILY_NAMES.map(m => dv[m]
       ? `<span class="vote-chip"><span class="ce">${VOTE_EMOJI[dv[m]]}</span> ${m}</span>` : ''
     ).join('');
 
     return `
       <div class="dinner-card animate-in" onclick="showResults('${esc(dinner)}')">
         <div class="name">${dinner}</div>
-        <div class="votes-row">${chips}</div>
+        <div class="votes-row">${chips || '<span style="color:var(--muted);font-size:.85rem">No votes yet</span>'}</div>
       </div>`;
   }).join('');
 }
 
 // ═══════════════════════════════════════════════
-// PICKER
+// PICKER — two steps
 // ═══════════════════════════════════════════════
 
 function openPicker() {
   document.getElementById('picker-overlay').classList.add('open');
-  document.getElementById('picker-search').value = '';
-  renderPickerList(DINNERS);
-  setTimeout(() => document.getElementById('picker-search').focus(), 150);
+  showPersonStep();
 }
+
 function maybeClosePicker(e) {
   if (e.target === document.getElementById('picker-overlay'))
     document.getElementById('picker-overlay').classList.remove('open');
 }
+
+// Step 1: person
+function showPersonStep() {
+  document.getElementById('picker-step-person').style.display = '';
+  document.getElementById('picker-step-dinner').style.display = 'none';
+
+  document.getElementById('person-grid').innerHTML = FAMILY.map(f => `
+    <button class="person-btn" onclick="selectPerson('${esc(f.name)}')">
+      <span class="avatar">${f.avatar}</span>
+      ${f.name}
+    </button>`).join('');
+}
+
+function selectPerson(name) {
+  currentPerson = name;
+  showDinnerStep();
+}
+
+// Step 2: dinner
+function showDinnerStep() {
+  document.getElementById('picker-step-person').style.display = 'none';
+  document.getElementById('picker-step-dinner').style.display = '';
+  document.getElementById('picker-dinner-title').textContent = `🍴 ${currentPerson}'s Dinner`;
+  document.getElementById('picker-search').value = '';
+  renderPickerList(DINNERS);
+  setTimeout(() => document.getElementById('picker-search').focus(), 150);
+}
+
 function filterDinners(q) {
   const f = q ? DINNERS.filter(d => d.toLowerCase().includes(q.toLowerCase())) : DINNERS;
   renderPickerList(f);
 }
+
 function renderPickerList(list) {
   const votes = loadVotes();
-  document.getElementById('picker-list').innerHTML = list.map(d => `
-    <div class="picker-item" onclick="startVoting('${esc(d)}')">
-      ${d}
-      ${votes[d] ? '<span class="voted-tag">Voted</span>' : ''}
-    </div>`).join('');
+  document.getElementById('picker-list').innerHTML = list.map(d => {
+    const myVote = votes[d] && votes[d][currentPerson];
+    const tag = myVote
+      ? `<span class="voted-tag">${VOTE_EMOJI[myVote]} Voted</span>`
+      : '';
+    return `
+      <div class="picker-item" onclick="startVoting('${esc(d)}')">
+        <span>${d}</span>${tag}
+      </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════
@@ -530,80 +615,66 @@ function renderPickerList(list) {
 
 function startVoting(dinner) {
   document.getElementById('picker-overlay').classList.remove('open');
-  currentDinner     = dinner;
-  currentVoterIndex = 0;
-  pendingVotes      = {};
-  renderVoteScreen();
+  currentDinner = dinner;
+  document.getElementById('vote-dinner-name').textContent = dinner;
+  document.getElementById('vote-person-name').textContent = currentPerson;
   showView('vote');
 }
 
-function renderVoteScreen() {
-  const person = FAMILY[currentVoterIndex];
-  document.getElementById('vote-progress').textContent =
-    `${currentVoterIndex + 1} of ${FAMILY.length}`;
-  document.getElementById('vote-dinner-name').textContent = currentDinner;
-  document.getElementById('vote-person-name').textContent = person;
-
-  const next = FAMILY[currentVoterIndex + 1];
-  document.getElementById('pass-prompt').innerHTML = next
-    ? `📱 Pass the phone to <strong>${next}</strong>`
-    : `✅ Last vote — results coming up!`;
-}
-
 function castVote(vote) {
-  pendingVotes[FAMILY[currentVoterIndex]] = vote;
-  currentVoterIndex++;
+  const votes = loadVotes();
+  if (!votes[currentDinner]) votes[currentDinner] = {};
+  votes[currentDinner][currentPerson] = vote;
+  saveVotes(votes);
 
-  if (currentVoterIndex >= FAMILY.length) {
-    const votes = loadVotes();
-    votes[currentDinner] = pendingVotes;
-    saveVotes(votes);
-    showResults(currentDinner);
-    launchConfetti();
-  } else {
-    renderVoteScreen();
-  }
+  showResults(currentDinner, currentPerson);
+
+  // Confetti only if all 5 have now voted
+  const dv    = votes[currentDinner];
+  const voted = FAMILY_NAMES.filter(m => dv[m]).length;
+  if (voted === FAMILY_NAMES.length) launchConfetti();
 }
 
 // ═══════════════════════════════════════════════
 // RESULTS
 // ═══════════════════════════════════════════════
 
-function showResults(dinner) {
+function showResults(dinner, highlightPerson) {
   const votes = loadVotes();
   const dv    = votes[dinner] || {};
 
   const counts = { yum: 0, soso: 0, nope: 0 };
-  FAMILY.forEach(m => { if (dv[m]) counts[dv[m]]++; });
+  FAMILY_NAMES.forEach(m => { if (dv[m]) counts[dv[m]]++; });
 
   document.getElementById('count-yum').textContent  = counts.yum;
   document.getElementById('count-soso').textContent = counts.soso;
   document.getElementById('count-nope').textContent = counts.nope;
   document.getElementById('results-subhead').textContent = dinner;
 
-  // Score: yum=3, soso=2, nope=1 out of max 3×n
-  const voted    = FAMILY.filter(m => dv[m]).length;
+  const voted    = FAMILY_NAMES.filter(m => dv[m]).length;
   const score    = counts.yum * 3 + counts.soso * 2 + counts.nope * 1;
   const maxScore = voted * 3;
   const pct      = maxScore > 0 ? score / maxScore : 0;
 
   let trophy, headline;
-  if (pct >= 0.85) { trophy = '⭐️'; headline = 'Family Favourite!'; }
-  else if (pct >= 0.67) { trophy = '😋'; headline = 'Pretty Tasty!'; }
-  else if (pct >= 0.5)  { trophy = '😐'; headline = 'Mixed Feelings'; }
-  else                   { trophy = '😬'; headline = 'Maybe Not Again…'; }
+  if (voted === 0)       { trophy = '🍽️'; headline = 'No votes yet'; }
+  else if (pct >= 0.85)  { trophy = '⭐️'; headline = 'Family Favourite!'; }
+  else if (pct >= 0.67)  { trophy = '😋'; headline = 'Pretty Tasty!'; }
+  else if (pct >= 0.5)   { trophy = '😐'; headline = 'Mixed Feelings'; }
+  else                    { trophy = '😬'; headline = 'Maybe Not Again…'; }
 
   document.getElementById('results-trophy').textContent   = trophy;
   document.getElementById('results-headline').textContent = headline;
 
-  document.getElementById('member-results').innerHTML = FAMILY.map((m, i) => {
-    const v = dv[m];
+  document.getElementById('member-results').innerHTML = FAMILY_NAMES.map((m, i) => {
+    const v         = dv[m];
+    const highlight = m === highlightPerson ? 'highlight' : '';
     return `
-      <div class="member-row" style="animation: slideUp 0.2s ${i * 0.06}s ease both">
-        <span class="member-name">${m}</span>
+      <div class="member-row ${highlight}" style="animation: slideUp 0.2s ${i * 0.06}s ease both">
+        <span class="member-name">${m}${m === highlightPerson ? ' 👈' : ''}</span>
         <div style="text-align:right">
           <div class="member-vote-emoji">${v ? VOTE_EMOJI[v] : '—'}</div>
-          <div class="member-vote-label">${v ? VOTE_LABEL[v] : 'No vote'}</div>
+          <div class="member-vote-label">${v ? VOTE_LABEL[v] : 'Not voted yet'}</div>
         </div>
       </div>`;
   }).join('');
@@ -617,25 +688,23 @@ function showResults(dinner) {
 // ═══════════════════════════════════════════════
 
 function buildCSV(dinnerFilter) {
-  const votes = loadVotes();
-  const dinners = dinnerFilter
-    ? [dinnerFilter]
-    : Object.keys(votes);
+  const votes   = loadVotes();
+  const dinners = dinnerFilter ? [dinnerFilter] : Object.keys(votes);
 
-  const header = ['Dinner', ...FAMILY, 'Yum Count', 'So-so Count', 'Not Good Count', 'Score'];
-  const rows = dinners.map(dinner => {
-    const dv = votes[dinner] || {};
+  const header = ['Dinner', ...FAMILY_NAMES, 'Yum', 'So-so', 'Not Good', 'Score'];
+  const rows   = dinners.map(dinner => {
+    const dv     = votes[dinner] || {};
     const counts = { yum: 0, soso: 0, nope: 0 };
-    const memberVotes = FAMILY.map(m => {
+    const cols   = FAMILY_NAMES.map(m => {
       const v = dv[m] || '';
       if (v) counts[v]++;
       return VOTE_LABEL[v] || '';
     });
-    const voted    = FAMILY.filter(m => dv[m]).length;
+    const voted    = FAMILY_NAMES.filter(m => dv[m]).length;
     const score    = counts.yum * 3 + counts.soso * 2 + counts.nope * 1;
     const maxScore = voted * 3;
     const pct      = maxScore > 0 ? Math.round((score / maxScore) * 100) + '%' : '—';
-    return [dinner, ...memberVotes, counts.yum, counts.soso, counts.nope, pct];
+    return [dinner, ...cols, counts.yum, counts.soso, counts.nope, pct];
   });
 
   return [header, ...rows]
@@ -644,20 +713,13 @@ function buildCSV(dinnerFilter) {
 }
 
 function openExportSingle() {
-  const csv = buildCSV(currentDinner);
-  showExportModal(`Export: ${currentDinner}`, csv, slugify(currentDinner));
+  showExportModal(`Export: ${currentDinner}`, buildCSV(currentDinner), slugify(currentDinner));
 }
-
 function openExportAll() {
   const votes = loadVotes();
-  if (Object.keys(votes).length === 0) {
-    showToast('No votes to export yet!');
-    return;
-  }
-  const csv = buildCSV(null);
-  showExportModal('Export All Results', csv, 'dinner-votes-all');
+  if (Object.keys(votes).length === 0) { showToast('No votes to export yet!'); return; }
+  showExportModal('Export All Results', buildCSV(null), 'dinner-votes-all');
 }
-
 function showExportModal(title, csv, filename) {
   currentExportData = csv;
   currentExportName = filename;
@@ -665,31 +727,17 @@ function showExportModal(title, csv, filename) {
   document.getElementById('export-textarea').value = csv;
   document.getElementById('export-modal').classList.add('open');
 }
-
-function closeModal() {
-  document.getElementById('export-modal').classList.remove('open');
-}
-function maybeCloseModal(e) {
-  if (e.target === document.getElementById('export-modal')) closeModal();
-}
-
+function closeModal() { document.getElementById('export-modal').classList.remove('open'); }
+function maybeCloseModal(e) { if (e.target === document.getElementById('export-modal')) closeModal(); }
 function copyExport() {
-  navigator.clipboard.writeText(currentExportData).then(() => {
-    showToast('Copied to clipboard!');
-  }).catch(() => {
-    // fallback
-    document.getElementById('export-textarea').select();
-    document.execCommand('copy');
-    showToast('Copied!');
-  });
+  navigator.clipboard.writeText(currentExportData)
+    .then(() => showToast('Copied to clipboard!'))
+    .catch(() => { document.getElementById('export-textarea').select(); document.execCommand('copy'); showToast('Copied!'); });
 }
-
 function downloadExport() {
   const blob = new Blob([currentExportData], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = currentExportName + '.csv';
+  const a    = Object.assign(document.createElement('a'), { href: url, download: currentExportName + '.csv' });
   a.click();
   URL.revokeObjectURL(url);
   showToast('Downloaded!');
@@ -718,35 +766,27 @@ function launchConfetti() {
   const ctx    = canvas.getContext('2d');
   canvas.width  = window.innerWidth;
   canvas.height = window.innerHeight;
-
-  const colors = ['#e63946','#f4a261','#2a9d8f','#e9c46a','#457b9d','#a8dadc'];
-  const particles = Array.from({ length: 100 }, () => ({
-    x: Math.random() * canvas.width,
-    y: -20,
+  const colors  = ['#e63946','#f4a261','#2a9d8f','#e9c46a','#457b9d','#a8dadc'];
+  const parts   = Array.from({ length: 100 }, () => ({
+    x: Math.random() * canvas.width, y: -20,
     size: Math.random() * 9 + 4,
-    speedY: Math.random() * 3.5 + 1.5,
-    speedX: (Math.random() - 0.5) * 3,
-    rot: Math.random() * 360,
-    rotSpeed: (Math.random() - 0.5) * 6,
+    sy: Math.random() * 3.5 + 1.5, sx: (Math.random() - 0.5) * 3,
+    rot: Math.random() * 360, rs: (Math.random() - 0.5) * 6,
     color: colors[Math.floor(Math.random() * colors.length)],
   }));
-
   let rafId;
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let alive = false;
-    particles.forEach(p => {
-      p.y += p.speedY; p.x += p.speedX; p.rot += p.rotSpeed;
+    parts.forEach(p => {
+      p.y += p.sy; p.x += p.sx; p.rot += p.rs;
       if (p.y < canvas.height) alive = true;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot * Math.PI / 180);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
       ctx.restore();
     });
-    if (alive) { rafId = requestAnimationFrame(draw); }
-    else { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    if (alive) rafId = requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
   draw();
   setTimeout(() => { cancelAnimationFrame(rafId); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 4000);
@@ -758,18 +798,11 @@ function launchConfetti() {
 
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-
-function esc(s) {
-  return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-}
-
-function slugify(s) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+function esc(s) { return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+function slugify(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
 
 // ═══════════════════════════════════════════════
 // INIT
